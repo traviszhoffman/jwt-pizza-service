@@ -79,21 +79,31 @@ class DB {
     const connection = await this.getConnection();
     try {
       const params = [];
+      const values = [];
       if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
-        params.push(`password='${hashedPassword}'`);
+        params.push('password=?');
+        values.push(hashedPassword);
       }
       if (email) {
-        params.push(`email='${email}'`);
+        params.push('email=?');
+        values.push(email);
       }
       if (name) {
-        params.push(`name='${name}'`);
+        params.push('name=?');
+        values.push(name);
       }
       if (params.length > 0) {
-        const query = `UPDATE user SET ${params.join(', ')} WHERE id=${userId}`;
-        await this.query(connection, query);
+        values.push(userId);
+        const query = `UPDATE user SET ${params.join(', ')} WHERE id=?`;
+        await this.query(connection, query, values);
       }
-      return this.getUser(email, password);
+      // Get user by ID and return with roles
+      const userResult = await this.query(connection, `SELECT id, name, email FROM user WHERE id=?`, [userId]);
+      const user = userResult[0];
+      const roleResult = await this.query(connection, `SELECT role FROM userRole WHERE userId=?`, [userId]);
+      user.roles = roleResult.map((r) => ({ role: r.role }));
+      return user;
     } finally {
       connection.end();
     }
