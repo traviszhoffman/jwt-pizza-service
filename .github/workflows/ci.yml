@@ -128,5 +128,9 @@ jobs:
           ECR_REPOSITORY: 'jwt-pizza-service'
         run: |
           docker build --platform=linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY --push .
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >>  $GITHUB_OUTPUT 
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >>  $GITHUB_OUTPUT
+
+      - name: Deploy new container
+        run: |
+          aws ecs update-service --cluster jwt-pizza-service --service jwt-pizza-service --force-new-deployment 
       
