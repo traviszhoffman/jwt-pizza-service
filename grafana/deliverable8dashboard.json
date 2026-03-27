@@ -5,8 +5,8 @@
     "name": "trjcbnw",
     "namespace": "stacks-1573637",
     "uid": "cec84a1e-d71e-4728-b056-475cbf12cf38",
-    "resourceVersion": "1774623339162111",
-    "generation": 16,
+    "resourceVersion": "1774627260673047",
+    "generation": 25,
     "creationTimestamp": "2026-03-27T03:34:16Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "1745575277830144"
@@ -16,7 +16,7 @@
       "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:ffh8rll0006bkd",
-      "grafana.app/updatedTimestamp": "2026-03-27T14:55:39Z"
+      "grafana.app/updatedTimestamp": "2026-03-27T16:01:00Z"
     }
   },
   "spec": {
@@ -48,7 +48,7 @@
         "kind": "Panel",
         "spec": {
           "id": 10,
-          "title": "New panel",
+          "title": "Service endpoint latency",
           "description": "",
           "links": [],
           "data": {
@@ -162,6 +162,124 @@
           }
         }
       },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "id": 11,
+          "title": "pizza creation latency",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "editorMode": "builder",
+                        "expr": "pizza_factory_latency_ms_milliseconds",
+                        "legendFormat": "__auto",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.0-23605486576",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 25,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
       "panel-3": {
         "kind": "Panel",
         "spec": {
@@ -184,8 +302,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "code",
-                        "expr": "http_requests_total{source=\"jwt-pizza-service-dev\"}",
+                        "editorMode": "builder",
+                        "expr": "rate(http_requests_total{source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "__auto",
                         "range": true
@@ -206,8 +324,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "code",
-                        "expr": "http_requests_by_method_total",
+                        "editorMode": "builder",
+                        "expr": "rate(http_requests_by_method_total{source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "__auto",
                         "range": true
@@ -297,7 +415,32 @@
                     }
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "__systemRef": "hideSeriesFrom",
+                    "matcher": {
+                      "id": "byNames",
+                      "options": {
+                        "mode": "exclude",
+                        "names": [
+                          "{source=\"jwt-pizza-service\"}"
+                        ],
+                        "prefix": "All except:",
+                        "readOnly": true
+                      }
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.hideFrom",
+                        "value": {
+                          "legend": false,
+                          "tooltip": true,
+                          "viz": true
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -515,6 +658,7 @@
               },
               "fieldConfig": {
                 "defaults": {
+                  "unit": "percent",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -561,7 +705,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "auth_attempts_success_total",
+                        "expr": "rate(auth_attempts_success_total{source=\"jwt-pizza-service\"}[1m])",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -582,7 +726,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "auth_attempts_failed_total",
+                        "expr": "rate(auth_attempts_failed_total{source=\"jwt-pizza-service\"}[1m])",
                         "instant": false,
                         "legendFormat": "__auto",
                         "range": true
@@ -701,7 +845,7 @@
                       },
                       "spec": {
                         "editorMode": "builder",
-                        "expr": "pizza_revenue_USD_total",
+                        "expr": "rate(pizza_revenue_USD_total{source=\"jwt-pizza-service\"}[1m])",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -767,7 +911,7 @@
         "kind": "Panel",
         "spec": {
           "id": 8,
-          "title": "Pizza Purchases",
+          "title": "Pizza Purchases Creation Failuers",
           "description": "",
           "links": [],
           "data": {
@@ -925,8 +1069,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "code",
-                        "expr": "pizzas_sold_total",
+                        "editorMode": "builder",
+                        "expr": "rate(pizzas_sold_total{source=\"jwt-pizza-service\"}[1m])",
                         "interval": "",
                         "legendFormat": "__auto",
                         "range": true
@@ -1128,6 +1272,19 @@
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-10"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 40,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
               }
             }
           }
