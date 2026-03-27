@@ -157,10 +157,25 @@ function sendToGrafana(metrics) {
       'Content-Type': 'application/json',
     },
   })
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    .then(async (res) => {
+      if (res.ok) {
+        return;
+      }
+
+      let responseBody = '';
+      try {
+        responseBody = await res.text();
+      } catch {
+        responseBody = '<unable to read response body>';
+      }
+
+      console.error(
+        `[metrics] Failed to send to Grafana: HTTP ${res.status} ${res.statusText}; body=${responseBody}`
+      );
     })
-    .catch((err) => console.error('[metrics] Failed to send to Grafana:', err));
+    .catch((err) => {
+      console.error('[metrics] Failed to send to Grafana (network/runtime):', err);
+    });
 }
 
 // ─── Periodic reporting ────────────────────────────────────────────────────
