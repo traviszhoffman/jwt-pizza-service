@@ -29,6 +29,8 @@ const latencyMetrics = {
   endpointLatencies: {}, // { '[GET] /api/order': { sum, count } }
 };
 
+let previousCpuSnapshot = captureCpuSnapshot();
+
 // ─── Public API ────────────────────────────────────────────────────────────
 
 /**
@@ -94,9 +96,32 @@ function pizzaPurchase(success, latencyMs, price, count = 1) {
 
 // ─── System metrics helpers ────────────────────────────────────────────────
 
+function captureCpuSnapshot() {
+  const cpus = os.cpus();
+  let idle = 0;
+  let total = 0;
+
+  for (const cpu of cpus) {
+    idle += cpu.times.idle;
+    total += cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.idle + cpu.times.irq;
+  }
+
+  return { idle, total };
+}
+
 function getCpuUsagePercentage() {
-  const cpuUsage = os.loadavg()[0] / os.cpus().length;
-  return parseFloat((cpuUsage * 100).toFixed(2));
+  const current = captureCpuSnapshot();
+  const totalDelta = current.total - previousCpuSnapshot.total;
+  const idleDelta = current.idle - previousCpuSnapshot.idle;
+
+  previousCpuSnapshot = current;
+
+  if (totalDelta <= 0) {
+    return 0;
+  }
+
+  const busyDelta = totalDelta - idleDelta;
+  return parseFloat(((busyDelta / totalDelta) * 100).toFixed(2));
 }
 
 function getMemoryUsagePercentage() {
