@@ -14,7 +14,7 @@ const authMetrics = {
 };
 
 const userMetrics = {
-  activeUsers: new Set(), // track by userId or IP
+  activeUsers: new Map(), // track by userId/IP with last activity timestamp
 };
 
 const purchaseMetrics = {
@@ -48,7 +48,8 @@ function requestTracker(req, res, next) {
 
   // Track active users by userId (if authenticated) or IP fallback
   const userId = req.user?.id || req.ip;
-  if (userId) userMetrics.activeUsers.add(userId);
+  if (userId) userMetrics.activeUsers.set(userId, Date.now());
+
 
   res.on('finish', () => {
     const latencyMs = Date.now() - start;
@@ -221,11 +222,26 @@ function sendMetricsPeriodically(periodMs = 60_000) {
       metrics.push(createMetric('auth_attempts_failed',  authMetrics.failedLogins,    '1', 'sum', 'asInt'));
 
       // ── Active users ─────────────────────────────────────────────────────
+      const now = Date.now();
+      const activeWindowSeconds = 300; // 5-minute window
+      let activeUserCount = 0;
+      
+      userMetrics.activeUsers.forEach((lastActivityTime) => {
+        if (now - lastActivityTime < activeWindowSeconds * 1000) {
+          activeUserCount++;
+        }
+      });
+      
       metrics.push(
-        createMetric('active_users', userMetrics.activeUsers.size, '1', 'gauge', 'asInt')
+        createMetric('active_users', activeUserCount, '1', 'gauge', 'asInt')
       );
-      // Reset the set each period so it reflects current-window users
-      userMetrics.activeUsers.clear();
+      // Clean up stale entries (older than 10 minutes)
+      const staleThresholdMs = 600 * 1000;
+      userMetrics.activeUsers.forEach((lastActivityTime, userId) => {
+        if (now - lastActivityTime > staleThresholdMs) {
+          userMetrics.activeUsers.delete(userId);
+        }
+      });
 
       // ── System ───────────────────────────────────────────────────────────
       metrics.push(createMetric('cpu_usage_percent',    getCpuUsagePercentage(),    '%', 'gauge', 'asDouble'));
