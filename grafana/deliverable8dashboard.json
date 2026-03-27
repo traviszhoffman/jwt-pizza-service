@@ -5,8 +5,8 @@
     "name": "trjcbnw",
     "namespace": "stacks-1573637",
     "uid": "cec84a1e-d71e-4728-b056-475cbf12cf38",
-    "resourceVersion": "1774627260673047",
-    "generation": 25,
+    "resourceVersion": "1774647473682958",
+    "generation": 34,
     "creationTimestamp": "2026-03-27T03:34:16Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "1745575277830144"
@@ -16,7 +16,7 @@
       "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:ffh8rll0006bkd",
-      "grafana.app/updatedTimestamp": "2026-03-27T16:01:00Z"
+      "grafana.app/updatedTimestamp": "2026-03-27T21:37:53Z"
     }
   },
   "spec": {
@@ -302,8 +302,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "builder",
-                        "expr": "rate(http_requests_total{source=\"jwt-pizza-service\"}[1m])",
+                        "editorMode": "code",
+                        "expr": "rate(http_requests_total{source=\"jwt-pizza-service\"}[5m]) * 60",
                         "instant": false,
                         "legendFormat": "__auto",
                         "range": true
@@ -324,8 +324,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "builder",
-                        "expr": "rate(http_requests_by_method_total{source=\"jwt-pizza-service\"}[1m])",
+                        "editorMode": "code",
+                        "expr": "rate(http_requests_by_method_total[5m]) * 60",
                         "instant": false,
                         "legendFormat": "__auto",
                         "range": true
@@ -415,32 +415,7 @@
                     }
                   }
                 },
-                "overrides": [
-                  {
-                    "__systemRef": "hideSeriesFrom",
-                    "matcher": {
-                      "id": "byNames",
-                      "options": {
-                        "mode": "exclude",
-                        "names": [
-                          "{source=\"jwt-pizza-service\"}"
-                        ],
-                        "prefix": "All except:",
-                        "readOnly": true
-                      }
-                    },
-                    "properties": [
-                      {
-                        "id": "custom.hideFrom",
-                        "value": {
-                          "legend": false,
-                          "tooltip": true,
-                          "viz": true
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "overrides": []
               }
             }
           }
@@ -704,8 +679,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "builder",
-                        "expr": "rate(auth_attempts_success_total{source=\"jwt-pizza-service\"}[1m])",
+                        "editorMode": "code",
+                        "expr": "rate(auth_attempts_success_total{source=\"jwt-pizza-service\"}[5m]) * 60",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -844,8 +819,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "builder",
-                        "expr": "rate(pizza_revenue_USD_total{source=\"jwt-pizza-service\"}[1m])",
+                        "editorMode": "code",
+                        "expr": "rate(pizza_revenue_USD_total{source=\"jwt-pizza-service\"}[5m]) * 60",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -911,7 +886,7 @@
         "kind": "Panel",
         "spec": {
           "id": 8,
-          "title": "Pizza Purchases Creation Failuers",
+          "title": "Pizza Purchases Creation Failures",
           "description": "",
           "links": [],
           "data": {
@@ -1069,8 +1044,8 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "editorMode": "builder",
-                        "expr": "rate(pizzas_sold_total{source=\"jwt-pizza-service\"}[1m])",
+                        "editorMode": "code",
+                        "expr": "rate(pizzas_sold_total{source=\"jwt-pizza-service\"}[5m]) * 60",
                         "interval": "",
                         "legendFormat": "__auto",
                         "range": true
