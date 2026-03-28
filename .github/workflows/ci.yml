@@ -61,6 +61,12 @@ jobs:
               apiKey: '${{ secrets.METRICS_API_KEY }}',
               accountId: '${{ secrets.METRICS_ACCOUNT_ID }}',
             },
+            logging:    {
+              source: 'jwt-pizza-service',
+              accountId: ${{ secrets.LOGGING_ACCOUNT_ID }},
+              endpointUrl: '${{ secrets.LOGGING_ENDPOINT_URL }}',
+              apiKey: '${{ secrets.LOGGING_API_KEY }}',
+          },
           };" > src/config.js
 
       - name: Tests
