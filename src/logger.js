@@ -9,8 +9,8 @@ class Logger {
         path: req.originalUrl,
         method: req.method,
         statusCode: res.statusCode,
-        reqBody: JSON.stringify(req.body),
-        resBody: JSON.stringify(resBody),
+        reqBody: req.body,
+        resBody: resBody,
       };
       const level = this.statusToLogLevel(res.statusCode);
       this.log(level, 'http', logData);
@@ -38,9 +38,43 @@ class Logger {
     return (Math.floor(Date.now()) * 1000000).toString();
   }
 
+  sanitizeValue(value, keyName = '') {
+    const sensitiveKeys = ['password', 'token', 'jwt', 'authorization', 'apikey', 'api_key', 'session'];
+    const isSensitiveKey = sensitiveKeys.some((k) => keyName.toLowerCase().includes(k));
+
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    if (isSensitiveKey) {
+      return '*****';
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sanitizeValue(item));
+    }
+
+    if (typeof value === 'object') {
+      const sanitized = {};
+      for (const [k, v] of Object.entries(value)) {
+        sanitized[k] = this.sanitizeValue(v, k);
+      }
+      return sanitized;
+    }
+
+    if (typeof value === 'string') {
+      return value
+        .replace(/Bearer\s+[A-Za-z0-9\-_.=]+/gi, 'Bearer *****')
+        .replace(/("(?:password|token|jwt|authorization|session)"\s*:\s*")([^"]+)(")/gi, '$1*****$3')
+        .replace(/(\\"(?:password|token|jwt|authorization|session)\\"\s*:\s*\\")([^\\"]+)(\\")/gi, '$1*****$3')
+        .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '*****');
+    }
+
+    return value;
+  }
+
   sanitize(logData) {
-    logData = JSON.stringify(logData);
-    return logData.replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\": \\"*****\\"');
+    return JSON.stringify(this.sanitizeValue(logData));
   }
 
   sendLogToGrafana(event) {
@@ -63,7 +97,7 @@ class Logger {
   }
 
   factoryLogger(orderInfo) {
-    const logData = { orderInfo: this.sanitize(orderInfo) };
+    const logData = { orderInfo };
     this.log('info', 'factory', logData);
   }
 
