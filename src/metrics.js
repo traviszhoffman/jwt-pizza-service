@@ -206,7 +206,7 @@ function sendToGrafana(metrics) {
 
 // ─── Periodic reporting ────────────────────────────────────────────────────
 
-function sendMetricsPeriodically(periodMs = 60_000) {
+function sendMetricsPeriodically(periodMs = 15_000) {
   const timer = setInterval(() => {
     try {
       const metrics = [];
@@ -277,6 +277,6 @@ function sendMetricsPeriodically(periodMs = 60_000) {
 }
 
 // Start reporting immediately when this module is loaded
-sendMetricsPeriodically(60_000);
+sendMetricsPeriodically(15_000);
 
 module.exports = { requestTracker, authAttempt, pizzaPurchase };
