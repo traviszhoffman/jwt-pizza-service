@@ -25,6 +25,14 @@ async function createAdminUser() {
   return { ...user, password: 'toomanysecrets' };
 }
 
+async function createDinerUser() {
+  let user = { password: 'a', roles: [{ role: Role.Diner }] };
+  user.name = randomName();
+  user.email = user.name + '@test.com';
+  user = await DB.addUser(user);
+  return { ...user, password: 'a' };
+}
+
 beforeAll(async () => {
   // Create admin user
   adminUser = await createAdminUser();
@@ -184,10 +192,9 @@ describe('PUT /api/user/:userId', () => {
   });
 
   test('should allow admin to update another user', async () => {
-    // Create a new user to update
-    const userToUpdate = { name: randomName(), email: randomName() + '@updateme.com', password: 'a' };
-    const createRes = await request(app).post('/api/auth').send(userToUpdate);
-    const userId = createRes.body.user.id;
+    // Create a new user to update without consuming auth rate-limit budget
+    const userToUpdate = await createDinerUser();
+    const userId = userToUpdate.id;
 
     const newName = randomName();
     const res = await request(app)
@@ -202,10 +209,9 @@ describe('PUT /api/user/:userId', () => {
   });
 
   test('should return 403 when non-admin tries to update another user', async () => {
-    // Create a victim user
-    const victimUser = { name: randomName(), email: randomName() + '@victim.com', password: 'a' };
-    const createRes = await request(app).post('/api/auth').send(victimUser);
-    const victimId = createRes.body.user.id;
+    // Create a victim user without consuming auth rate-limit budget
+    const victimUser = await createDinerUser();
+    const victimId = victimUser.id;
 
     const res = await request(app)
       .put(`/api/user/${victimId}`)

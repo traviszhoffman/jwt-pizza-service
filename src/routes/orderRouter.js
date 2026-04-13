@@ -84,7 +84,27 @@ orderRouter.post(
       return res.status(400).send({ message: 'order must contain at least one item' });
     }
 
-    const order = await DB.addDinerOrder(req.user, orderReq);
+    const menu = await DB.getMenu();
+    const menuById = new Map(menu.map((item) => [item.id, item]));
+    const normalizedItems = orderReq.items.map((item) => {
+      const menuItem = menuById.get(item.menuId);
+      if (!menuItem) {
+        throw new StatusCodeError(`invalid menu item ${item.menuId}`, 400);
+      }
+
+      return {
+        menuId: menuItem.id,
+        description: menuItem.title || menuItem.description,
+        price: menuItem.price,
+      };
+    });
+
+    const normalizedOrderReq = {
+      ...orderReq,
+      items: normalizedItems,
+    };
+
+    const order = await DB.addDinerOrder(req.user, normalizedOrderReq);
     const start = Date.now();
     const pizzaCount = Array.isArray(order.items) ? order.items.length : 0;
     const totalRevenue = (order.items || []).reduce((sum, item) => sum + (item.price || 0), 0);

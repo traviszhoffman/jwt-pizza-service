@@ -268,6 +268,29 @@ describe('POST /api/order', () => {
     expect(res.body.order.items.length).toBe(2);
   });
 
+  test('should ignore client-supplied item price and use menu price', async () => {
+    const tamperedPrice = (menuItem.price || 0) + 999;
+    const orderRequest = {
+      franchiseId: testFranchise.id,
+      storeId: testStore.id,
+      items: [
+        {
+          menuId: menuItem.id,
+          description: 'Totally not suspicious',
+          price: tamperedPrice,
+        },
+      ],
+    };
+
+    const res = await request(app)
+      .post('/api/order')
+      .set('Authorization', `Bearer ${regularToken}`)
+      .send(orderRequest);
+
+    expect(res.status).toBe(200);
+    expect(res.body.order.items[0].price).toBe(menuItem.price);
+  });
+
   test('should return 401 when not authenticated', async () => {
     const orderRequest = {
       franchiseId: testFranchise.id,
@@ -294,8 +317,8 @@ describe('POST /api/order', () => {
       .set('Authorization', `Bearer ${regularToken}`)
       .send(orderRequest);
 
-    // Should throw error when menuId doesn't exist
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
+    expect(res.body.message).toContain('invalid menu item');
   });
 
   test('should handle invalid franchiseId', async () => {
