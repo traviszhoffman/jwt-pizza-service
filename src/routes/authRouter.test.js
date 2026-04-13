@@ -21,6 +21,18 @@ test('login', async () => {
   expect(loginRes.body.user).toMatchObject(expectedUser);
 });
 
+test('login requires email', async () => {
+  const loginRes = await request(app).put('/api/auth').send({ password: testUser.password });
+  expect(loginRes.status).toBe(400);
+  expect(loginRes.body.message).toBe('email and password are required');
+});
+
+test('login requires password', async () => {
+  const loginRes = await request(app).put('/api/auth').send({ email: testUser.email });
+  expect(loginRes.status).toBe(400);
+  expect(loginRes.body.message).toBe('email and password are required');
+});
+
 function expectValidJwt(potentialJwt) {
   expect(potentialJwt).toMatch(/^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/);
 }
