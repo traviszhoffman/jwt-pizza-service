@@ -80,6 +80,10 @@ orderRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
+    if (!Array.isArray(orderReq.items) || orderReq.items.length === 0) {
+      return res.status(400).send({ message: 'order must contain at least one item' });
+    }
+
     const order = await DB.addDinerOrder(req.user, orderReq);
     const start = Date.now();
     const pizzaCount = Array.isArray(order.items) ? order.items.length : 0;

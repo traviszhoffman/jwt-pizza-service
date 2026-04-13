@@ -331,10 +331,7 @@ describe('POST /api/order', () => {
     expect([200, 500]).toContain(res.status);
   });
 
-  // BUG FOUND: Factory API hangs when order has empty items array
-  // This test is skipped to prevent timeout. The application should validate
-  // that items array is not empty before calling the factory API.
-  test.skip('should handle empty items array', async () => {
+  test('should reject empty items array', async () => {
     const orderRequest = {
       franchiseId: testFranchise.id,
       storeId: testStore.id,
@@ -346,9 +343,9 @@ describe('POST /api/order', () => {
       .set('Authorization', `Bearer ${regularToken}`)
       .send(orderRequest);
 
-    // Should succeed but create order with no items, or factory might reject
-    expect([200, 400, 500]).toContain(res.status);
-  }, 10000); // 10 second timeout in case factory API is slow
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('order must contain at least one item');
+  });
 
   test('should verify order appears in user orders', async () => {
     // Create an order
