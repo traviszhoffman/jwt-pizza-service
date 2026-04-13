@@ -194,14 +194,14 @@ describe('DELETE /api/franchise/:franchiseId', () => {
   });
 
   test('should delete franchise successfully', async () => {
-    const res = await request(app).delete(`/api/franchise/${testFranchiseId}`);
+    const res = await request(app).delete(`/api/franchise/${testFranchiseId}`).set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe('franchise deleted');
   });
 
   test('should handle invalid franchise ID', async () => {
-    const res = await request(app).delete('/api/franchise/99999');
+    const res = await request(app).delete('/api/franchise/99999').set('Authorization', `Bearer ${adminToken}`);
 
     // Should still return 200 based on current implementation
     expect(res.status).toBe(200);
