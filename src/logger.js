@@ -78,6 +78,10 @@ class Logger {
   }
 
   sendLogToGrafana(event) {
+    if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+      return;
+    }
+
     const body = JSON.stringify(event);
     fetch(`${config.logging.endpointUrl}`, {
       method: 'post',
@@ -86,9 +90,13 @@ class Logger {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${config.logging.accountId}:${config.logging.apiKey}`,
       },
-    }).then((res) => {
-      if (!res.ok) console.log('Failed to send log to Grafana');
-    });
+    })
+      .then((res) => {
+        if (!res.ok) console.log('Failed to send log to Grafana');
+      })
+      .catch(() => {
+        // Ignore logging transport errors in application flows and tests.
+      });
   }
 
   dbLogger(sqlQuery) {
