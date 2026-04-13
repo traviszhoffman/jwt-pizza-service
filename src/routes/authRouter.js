@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const config = require('../config.js');
 const metrics = require('../metrics.js');
-const { asyncHandler } = require('../endpointHelper.js');
+const { asyncHandler, isNonEmptyString, isValidEmail } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
 const rateLimit = require('express-rate-limit');
 const authRouter = express.Router();
@@ -71,8 +71,11 @@ authRouter.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    if (!isNonEmptyString(name) || !isNonEmptyString(email) || !isNonEmptyString(password)) {
       return res.status(400).json({ message: 'name, email, and password are required' });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'invalid email format' });
     }
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
     const auth = await setAuth(user);
@@ -87,8 +90,11 @@ authRouter.put(
   asyncHandler(async (req, res) => {
     try {
       const { email, password } = req.body;
-      if (!email || !password) {
+      if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
         return res.status(400).json({ message: 'email and password are required' });
+      }
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: 'invalid email format' });
       }
       const user = await DB.getUser(email, password);
       const auth = await setAuth(user);
@@ -127,7 +133,10 @@ async function clearAuth(req) {
 function readAuthToken(req) {
   const authHeader = req.headers.authorization;
   if (authHeader) {
-    return authHeader.split(' ')[1];
+    const [scheme, token] = authHeader.split(' ');
+    if (scheme === 'Bearer' && isNonEmptyString(token)) {
+      return token;
+    }
   }
   return null;
 }
