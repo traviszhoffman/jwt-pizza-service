@@ -333,9 +333,8 @@ describe('POST /api/order', () => {
       .set('Authorization', `Bearer ${regularToken}`)
       .send(orderRequest);
 
-    // Database will create order but factory might reject or we get 500
-    // Depends on foreign key constraints
-    expect([200, 500]).toContain(res.status);
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('invalid franchise/store combination');
   });
 
   test('should handle invalid storeId', async () => {
@@ -350,8 +349,8 @@ describe('POST /api/order', () => {
       .set('Authorization', `Bearer ${regularToken}`)
       .send(orderRequest);
 
-    // Database will create order but factory might reject or we get 500
-    expect([200, 500]).toContain(res.status);
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('invalid franchise/store combination');
   });
 
   test('should reject empty items array', async () => {

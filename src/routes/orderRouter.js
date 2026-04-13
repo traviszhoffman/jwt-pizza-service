@@ -4,7 +4,7 @@ const metrics = require('../metrics.js');
 const logger = require('../logger.js');
 const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
-const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
+const { asyncHandler, StatusCodeError, isNonEmptyString, toPositiveInt } = require('../endpointHelper.js');
 
 const orderRouter = express.Router();
 
@@ -60,6 +60,14 @@ orderRouter.put(
     }
 
     const addMenuItemReq = req.body;
+    if (!isNonEmptyString(addMenuItemReq?.title) || !isNonEmptyString(addMenuItemReq?.description) || !isNonEmptyString(addMenuItemReq?.image)) {
+      return res.status(400).json({ message: 'title, description, and image are required' });
+    }
+
+    if (typeof addMenuItemReq?.price !== 'number' || !Number.isFinite(addMenuItemReq.price) || addMenuItemReq.price <= 0) {
+      return res.status(400).json({ message: 'price must be a positive number' });
+    }
+
     await DB.addMenuItem(addMenuItemReq);
     res.send(await DB.getMenu());
   })
@@ -70,6 +78,10 @@ orderRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    if (req.query.page !== undefined && toPositiveInt(req.query.page) === null) {
+      return res.status(400).json({ message: 'invalid page' });
+    }
+
     res.json(await DB.getOrders(req.user, req.query.page));
   })
 );
@@ -80,8 +92,25 @@ orderRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
+
+    const franchiseId = toPositiveInt(orderReq?.franchiseId);
+    const storeId = toPositiveInt(orderReq?.storeId);
+    if (!franchiseId || !storeId) {
+      return res.status(400).send({ message: 'valid franchiseId and storeId are required' });
+    }
+
     if (!Array.isArray(orderReq.items) || orderReq.items.length === 0) {
       return res.status(400).send({ message: 'order must contain at least one item' });
+    }
+
+    if (orderReq.items.some((item) => !toPositiveInt(item?.menuId))) {
+      return res.status(400).send({ message: 'each item must include a valid menuId' });
+    }
+
+    const franchise = await DB.getFranchise({ id: franchiseId });
+    const storeBelongsToFranchise = franchise.stores.some((store) => store.id === storeId);
+    if (!storeBelongsToFranchise) {
+      return res.status(400).send({ message: 'invalid franchise/store combination' });
     }
 
     const menu = await DB.getMenu();
@@ -101,6 +130,8 @@ orderRouter.post(
 
     const normalizedOrderReq = {
       ...orderReq,
+      franchiseId,
+      storeId,
       items: normalizedItems,
     };
 
