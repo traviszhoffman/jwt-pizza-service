@@ -102,6 +102,9 @@ class DB {
       // Get user by ID and return with roles
       const userResult = await this.query(connection, `SELECT id, name, email FROM user WHERE id=?`, [userId]);
       const user = userResult[0];
+      if (!user) {
+        throw new StatusCodeError('unknown user', 404);
+      }
       const roleResult = await this.query(connection, `SELECT role FROM userRole WHERE userId=?`, [userId]);
       user.roles = roleResult.map((r) => ({ role: r.role }));
       return user;

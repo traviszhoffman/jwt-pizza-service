@@ -1,5 +1,5 @@
 const express = require('express');
-const { asyncHandler } = require('../endpointHelper.js');
+const { asyncHandler, isNonEmptyString, isValidEmail, toPositiveInt } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
 const { authRouter, setAuth } = require('./authRouter.js');
 
@@ -39,7 +39,23 @@ userRouter.put(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
-    const userId = Number(req.params.userId);
+    const userId = toPositiveInt(req.params.userId);
+    if (!userId) {
+      return res.status(400).json({ message: 'invalid userId' });
+    }
+
+    if (name === undefined && email === undefined && password === undefined) {
+      return res.status(400).json({ message: 'at least one field is required' });
+    }
+
+    if (name !== undefined && !isNonEmptyString(name)) {
+      return res.status(400).json({ message: 'invalid name' });
+    }
+
+    if (email !== undefined && !isValidEmail(email)) {
+      return res.status(400).json({ message: 'invalid email format' });
+    }
+
     const user = req.user;
     if (user.id !== userId && !user.isRole(Role.Admin)) {
       return res.status(403).json({ message: 'unauthorized' });

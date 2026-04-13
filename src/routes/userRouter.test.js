@@ -236,10 +236,8 @@ describe('PUT /api/user/:userId', () => {
       .set('Authorization', `Bearer ${regularToken}`)
       .send({});
 
-    // Should still succeed but not change anything
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('user');
-    expect(res.body).toHaveProperty('token');
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('at least one field is required');
   });
 
   test('should handle invalid userId', async () => {
