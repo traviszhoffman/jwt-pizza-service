@@ -4,7 +4,17 @@ const config = require('../config.js');
 const metrics = require('../metrics.js');
 const { asyncHandler } = require('../endpointHelper.js');
 const { DB, Role } = require('../database/database.js');
+const rateLimit = require('express-rate-limit');
 const authRouter = express.Router();
+
+// Rate limiter for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: 'Too many authentication attempts, please try again later',
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+});
 
 authRouter.docs = [
   {
@@ -58,6 +68,7 @@ authRouter.authenticateToken = (req, res, next) => {
 // register
 authRouter.post(
   '/',
+  authLimiter,
   asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -72,6 +83,7 @@ authRouter.post(
 // login
 authRouter.put(
   '/',
+  authLimiter,
   asyncHandler(async (req, res) => {
     try {
       const { email, password } = req.body;
